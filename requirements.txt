@@ -1,0 +1,5 @@
+# use == version_num to specify a specific version,
+# >= or <= to specify a range of version numbers,
+# or simply the module name to keep up to date
+
+python-dotenv
