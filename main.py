@@ -6,6 +6,7 @@ subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-U', '-r', 'requ
 from datetime import datetime
 from dotenv import load_dotenv, dotenv_values
 import json
+import numpy as np
 import os
 import pandas as pd
 from pathlib import Path
@@ -26,10 +27,13 @@ def request_data(endpoint, **parameters):
     return []
 
 def request_data_to_json(json_file_path, endpoint, **parameters):
-    json_data = json.loads(request_data(endpoint, parameters=parameters))
-    os.makedirs(Path(json_file_path).parent, exist_ok=True)
-    with open(json_file_path, 'w', encoding='utf-8') as f:
-        json.dump(json_data, f, ensure_ascii=False, indent=4)
+    if not up_to_date(json_file_path):
+        json_data = json.loads(request_data(endpoint, parameters=parameters))
+        os.makedirs(Path(json_file_path).parent, exist_ok=True)
+        with open(json_file_path, 'w', encoding='utf-8') as f:
+            json.dump(json_data, f, ensure_ascii=False, indent=4)
+    with open(json_file_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
 
 def up_to_date(filepath):
     time_stamp = datetime.fromtimestamp(os.path.getmtime(filepath)) if filepath.exists() else None
@@ -46,18 +50,18 @@ for ticker in sys.argv[1:]:
     if ticker not in available_tickers:
         print(f'{ticker} has no associated financial statements at financial modeling prep.')
         continue
-    income_statement_json = Path('data', ticker, 'income_statements.json')
-    if not up_to_date(income_statement_json):
-        request_data_to_json(income_statement_json, f'https://financialmodelingprep.com/api/v3/income-statement/{ticker}', period='annual', limit='11')
-    with open(income_statement_json, 'r', encoding='utf-8') as f:
-        income_statement = json.load(f)
-
-    balance_sheet_json = Path('data', ticker, 'balance_sheets.json')
-    if not up_to_date(balance_sheet_json):
-        request_data_to_json(balance_sheet_json, f'https://financialmodelingprep.com/api/v3/balance-sheet-statement/{ticker}', period='annual', limit='11')
-    with open(balance_sheet_json, 'r', encoding='utf-8') as f:
-        balance_sheet = json.load(f)
-
+    income_statement = request_data_to_json(Path('data', ticker, 'income_statements.json'),
+                                            f'https://financialmodelingprep.com/api/v3/income-statement/{ticker}',
+                                            period='annual',
+                                            limit='11')
+    balance_sheet = request_data_to_json(Path('data', ticker, 'balance_sheets.json'),
+                                         f'https://financialmodelingprep.com/api/v3/balance-sheet-statement/{ticker}',
+                                         period='annual',
+                                         limit='11')
+    metrics = request_data_to_json(Path('data', ticker, 'metrics.json'),
+                                  f'https://financialmodelingprep.com/api/v3/key-metrics/{ticker}',
+                                  period='annual',
+                                  limit='11')
     key_info_income = ['date',
                        'revenue',
                        'netIncome',
@@ -70,8 +74,25 @@ for ticker in sys.argv[1:]:
                         'totalNonCurrentLiabilities',
                         'totalEquity',
                         ]
+    key_info_metrics = ['date',
+                        'debtToEquity',
+                        'peRatio',
+                        'pbRatio',
+                        'roic',
+                        ]
+    
     df = pd.merge(pd.DataFrame({key : [year[key] for year in income_statement] for key in key_info_income}),
                   pd.DataFrame({key : [year[key] for year in balance_sheet] for key in key_info_balance}),
                   on='date').set_index('date')
-    df['roic'] = df.netIncome / (df.totalNonCurrentLiabilities + df.totalEquity)
-    print(df)
+    
+    for col in df.columns:
+        current_value = df.iloc[0][col]
+        growth_rate = np.power(current_value / df[col].iloc[1:], 1 / np.arange(1, len(df))) - 1
+        df[f'{col}_cagr'] = np.concatenate(([0], growth_rate))
+            
+    df = df.merge(pd.DataFrame({key : [year[key] for year in metrics] for key in key_info_metrics}).set_index('date'), left_index=True, right_index=True)
+    df['roic_calc'] = df.netIncome / (df.totalNonCurrentLiabilities + df.totalEquity)
+    # items to calculate
+    # true value and margin of safety price
+    # need float, current price
+    df.to_csv(Path('data', ticker, 'analysis.csv'))
