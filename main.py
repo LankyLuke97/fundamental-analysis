@@ -92,7 +92,14 @@ for ticker in sys.argv[1:]:
             
     df = df.merge(pd.DataFrame({key : [year[key] for year in metrics] for key in key_info_metrics}).set_index('date'), left_index=True, right_index=True)
     df['roic_calc'] = df.netIncome / (df.totalNonCurrentLiabilities + df.totalEquity)
-    # items to calculate
-    # true value and margin of safety price
-    # need float, current price
+    present_value = 0
+    if df.totalEquity_cagr.iloc[len(df)-1] > 0 and df.epsdiluted.iloc[0] > 0:
+        COMPOUND_YEARS = 10
+        DISCOUNT_RATE = 0.15
+        MAX_GROWTH_RATE = 0.2
+        compound_factor = np.power(1 + min(df.totalEquity_cagr.iloc[len(df)-1], MAX_GROWTH_RATE), COMPOUND_YEARS)
+        discount_factor = np.power(1 + DISCOUNT_RATE, -COMPOUND_YEARS)
+        future_value = df.epsdiluted.iloc[0] * compound_factor * df.peRatio.iloc[0]
+        present_value = future_value * discount_factor
     df.to_csv(Path('data', ticker, 'analysis.csv'))
+    print(f'{ticker} true value: {present_value:2f}, margin of safety price: {(present_value / 2):.2f}')
