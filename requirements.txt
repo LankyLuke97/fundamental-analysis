@@ -2,5 +2,8 @@
 # >= or <= to specify a range of version numbers,
 # or simply the module name to keep up to date
 
+numpy
+pandas
 python-dateutil
 python-dotenv
+scikit-learn

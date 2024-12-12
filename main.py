@@ -3,6 +3,7 @@ import sys
 
 subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-U', '-r', 'requirements.txt'])
 
+from collections import defaultdict
 import csv
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -13,7 +14,12 @@ import os
 import pandas as pd
 from pathlib import Path
 import requests
-import time
+from sklearn import linear_model
+from sklearn.linear_model import LinearRegression
+from sklearn import metrics
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.model_selection import train_test_split, cross_val_score
+from time import perf_counter
 from typing import NamedTuple
 
 class Record(NamedTuple):
@@ -62,6 +68,8 @@ if not watchlist:
     with open('watchlist.txt', 'r', encoding='utf-8') as f:
         watchlist = [ticker.strip() for ticker in f.readlines()]
 
+linear_regression_df = defaultdict(list)
+
 for ticker in watchlist if watchlist else sys.argv[1:]:
     if ticker not in available_tickers:
         print(f'{ticker} has no associated financial statements at financial modeling prep.')
@@ -80,7 +88,6 @@ for ticker in watchlist if watchlist else sys.argv[1:]:
                                   limit='11')
     eod = request_data_to_json(Path('data', ticker, 'end_of_day.json'),
                                   f'https://financialmodelingprep.com/api/v3/historical-price-full/{ticker}',
-                                  from_=datetime.strftime(datetime.today() - relativedelta(weeks=1), '%Y-%m-%d'),
                                   )
     
     key_info_income = ['date',
@@ -106,11 +113,25 @@ for ticker in watchlist if watchlist else sys.argv[1:]:
     df = pd.merge(pd.DataFrame({key : [year[key] for year in income_statement] for key in key_info_income}),
                   pd.DataFrame({key : [year[key] for year in balance_sheet] for key in key_info_balance}),
                   on='date').set_index('date')
-    
+
     for col in df.columns:
         current_value = df.iloc[0][col]
         growth_rate = np.power(current_value / df[col].iloc[1:], 1 / np.arange(1, len(df))) - 1
+        growth_rate_prev = np.power(df.iloc[1][col] / df[col].iloc[2:], 1 / np.arange(2, len(df))) - 1
         df[f'{col}_cagr'] = np.concatenate(([0], growth_rate))
+        df[f'{col}_cagr_prev'] = np.concatenate(([0,0], growth_rate_prev))
+    
+    last_filings = [income_statement[year]['fillingDate'] for year in [0,1]]
+    filing_prices = [float(eod['historical'][i]['adjClose']) for i in range(730) if eod['historical'][i]['date'] in last_filings]
+    year_return = (filing_prices[0] / filing_prices[1]) - 1
+
+    for index, row in df.interpolate(method='linear', axis=0).reset_index().iterrows():
+        if index < 2: continue
+        for col, value in row.items():
+            if '_cagr_prev' not in col: continue
+            linear_regression_df[f'{col}_{index}'].append(value)
+    linear_regression_df['year_return'].append(year_return)
+    linear_regression_df['ticker'].append(ticker)
             
     df = df.merge(pd.DataFrame({key : [year[key] for year in metrics] for key in key_info_metrics}).set_index('date'), left_index=True, right_index=True)
     df['roic_calc'] = df.netIncome / (df.totalNonCurrentLiabilities + df.totalEquity)
@@ -148,3 +169,14 @@ with open('watchlist_analysis.csv', mode="w", newline="", encoding="utf-8") as f
     writer.writeheader()
     for record in records:
         writer.writerow(record._asdict())
+
+linear_regression_df = pd.DataFrame(linear_regression_df).set_index('ticker')
+print(linear_regression_df)
+x = linear_regression_df.drop(columns=['year_return'])
+y = linear_regression_df['year_return']
+
+X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=100)
+reg_model = linear_model.LinearRegression()
+reg_model = LinearRegression.fit(X_train, y_train)
+print('Intercept: ',reg_model.intercept_)
+print(list(zip(x, reg_model.coef_)))
