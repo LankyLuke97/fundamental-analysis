@@ -171,12 +171,20 @@ with open('watchlist_analysis.csv', mode="w", newline="", encoding="utf-8") as f
         writer.writerow(record._asdict())
 
 linear_regression_df = pd.DataFrame(linear_regression_df).set_index('ticker')
-print(linear_regression_df)
 x = linear_regression_df.drop(columns=['year_return'])
 y = linear_regression_df['year_return']
 
 X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=100)
 reg_model = linear_model.LinearRegression()
-reg_model = LinearRegression.fit(X_train, y_train)
-print('Intercept: ',reg_model.intercept_)
-print(list(zip(x, reg_model.coef_)))
+reg_model.fit(X_train, y_train)
+y_pred = reg_model.predict(X_test)
+reg_model_diff = pd.DataFrame({'Actual value': y_test, 'Predicted value': y_pred})
+
+mae = mean_absolute_error(y_test, y_pred)
+mse = mean_squared_error(y_test, y_pred)
+r2 = np.sqrt(mean_squared_error(y_test, y_pred))
+
+print(reg_model_diff)
+print('Mean Absolute Error:', mae)
+print('Mean Square Error:', mse)
+print('Root Mean Square Error:', r2)
