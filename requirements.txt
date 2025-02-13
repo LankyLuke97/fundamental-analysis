@@ -7,3 +7,4 @@ pandas
 python-dateutil
 python-dotenv
 scikit-learn
+openpyxl

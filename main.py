@@ -10,6 +10,8 @@ from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv, dotenv_values
 import json
 import numpy as np
+import openpyxl
+from openpyxl.utils.dataframe import dataframe_to_rows
 import os
 import pandas as pd
 from pathlib import Path
@@ -135,6 +137,7 @@ for ticker in watchlist if watchlist else sys.argv[1:]:
             
     df = df.merge(pd.DataFrame({key : [year[key] for year in metrics] for key in key_info_metrics}).set_index('date'), left_index=True, right_index=True)
     df['roic_calc'] = df.netIncome / (df.totalNonCurrentLiabilities + df.totalEquity)
+    df['roic_avg'] = df.roic.expanding().mean()
 
     REFERENCE_RATE = 0.1
     years = [(y, w) for y, w in [(1, 0.17),(3, 0.22),(5,0.27),(10,0.34)] if y < len(df)]
@@ -163,6 +166,34 @@ for ticker in watchlist if watchlist else sys.argv[1:]:
     df.to_csv(Path('data', '_analysis', f'{ticker}.csv'))
     records.append(Record(ticker=ticker, weight=weight, present_value=present_value, margin_of_safety=(present_value/2), current_price=eod['historical'][0]['adjClose']))
 
+    cagrs_cols = [c for c in df.columns if c.endswith('cagr')] + ['roic_avg']
+    print(cagrs_cols)
+    cagr_df = df.loc[[v for v in df.index.values if v in [1, 3, 5, min(max(df.index.values), 10)]], cagrs_cols].transpose().iloc[:, ::-1]
+    print(cagr_df)
+
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    for row in dataframe_to_rows(cagr_df, index=True, header=True):
+        sheet.append(row)
+    for row in sheet["A1:E11"]:
+        for cell in row:
+            if isinstance(cell.value, (int, float)) and cell.value >= 0.1:
+                cell.fill = openpyxl.styles.PatternFill(start_color='00FF00', end_color='00FF00', fill_type='solid')
+            elif isinstance(cell.value, (int, float)):
+                cell.fill = openpyxl.styles.PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid')
+    sheet.move_range("A1:E11", rows=0, cols=12)
+    workbook.save(Path('data', '_analysis', f'{ticker}.xlsx'))
+
+'''
+Tasks
+
+Move to right enough for other items to go in
+Conditional format
+Write ratios to workbook
+Move down enough for other items to go in
+Write items
+'''
+'''
 records = sorted(records, key=lambda record: record.weight, reverse=True)
 with open('watchlist_analysis.csv', mode="w", newline="", encoding="utf-8") as file:
     writer = csv.DictWriter(file, fieldnames=Record._fields)
@@ -188,3 +219,4 @@ print(reg_model_diff)
 print('Mean Absolute Error:', mae)
 print('Mean Square Error:', mse)
 print('Root Mean Square Error:', r2)
+'''
