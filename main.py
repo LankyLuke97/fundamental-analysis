@@ -84,12 +84,15 @@ for ticker in watchlist if watchlist else sys.argv[1:]:
                                          f'https://financialmodelingprep.com/api/v3/balance-sheet-statement/{ticker}',
                                          period='annual',
                                          limit='11')
-    metrics = request_data_to_json(Path('data', ticker, 'metrics.json'),
+    _metrics = request_data_to_json(Path('data', ticker, 'metrics.json'),
                                   f'https://financialmodelingprep.com/api/v3/key-metrics/{ticker}',
                                   period='annual',
                                   limit='11')
     eod = request_data_to_json(Path('data', ticker, 'end_of_day.json'),
                                   f'https://financialmodelingprep.com/api/v3/historical-price-full/{ticker}',
+                                  )
+    dividends = request_data_to_json(Path('data', ticker, 'dividends.json'),
+                                  f'https://financialmodelingprep.com/api/v3/historical-price-full/stock_dividend/{ticker}',
                                   )
     
     key_info_income = ['date',
@@ -111,6 +114,9 @@ for ticker in watchlist if watchlist else sys.argv[1:]:
                         'roic',
                         'dividendYield',
                         ]
+    key_info_dividends = ['date',
+                          'adjDividend',
+                          ] # Can't process this in the same way
     
     df = pd.merge(pd.DataFrame({key : [year[key] for year in income_statement] for key in key_info_income}),
                   pd.DataFrame({key : [year[key] for year in balance_sheet] for key in key_info_balance}),
@@ -135,7 +141,7 @@ for ticker in watchlist if watchlist else sys.argv[1:]:
     linear_regression_df['year_return'].append(year_return)
     linear_regression_df['ticker'].append(ticker)
             
-    df = df.merge(pd.DataFrame({key : [year[key] for year in metrics] for key in key_info_metrics}).set_index('date'), left_index=True, right_index=True)
+    df = df.merge(pd.DataFrame({key : [year[key] for year in _metrics] for key in key_info_metrics}).set_index('date'), left_index=True, right_index=True)
     df['roic_calc'] = df.netIncome / (df.totalNonCurrentLiabilities + df.totalEquity)
     df['roic_avg'] = df.roic.expanding().mean()
 
@@ -166,14 +172,21 @@ for ticker in watchlist if watchlist else sys.argv[1:]:
     df.to_csv(Path('data', '_analysis', f'{ticker}.csv'))
     records.append(Record(ticker=ticker, weight=weight, present_value=present_value, margin_of_safety=(present_value/2), current_price=eod['historical'][0]['adjClose']))
 
-    cagrs_cols = [c for c in df.columns if c.endswith('cagr')] + ['roic_avg']
-    print(cagrs_cols)
+    stats_to_display = [
+        'roic',
+        'revenue',
+        'netIncome',
+        'epsdiluted',
+        'totalEquity',
+        'cashAndCashEquivalents',
+    ]
+    cagrs_cols = ['roic_avg'] + [f'{c}_cagr' for c in stats_to_display if c != 'roic'] 
     cagr_df = df.loc[[v for v in df.index.values if v in [1, 3, 5, min(max(df.index.values), 10)]], cagrs_cols].transpose().iloc[:, ::-1]
-    print(cagr_df)
+    refined_df = df[stats_to_display].transpose().iloc[:, ::-1]
 
     workbook = openpyxl.Workbook()
     sheet = workbook.active
-    for row in dataframe_to_rows(cagr_df, index=True, header=True):
+    for row in dataframe_to_rows(cagr_df, header=True, index=True):
         sheet.append(row)
     for row in sheet["A1:E11"]:
         for cell in row:
@@ -182,13 +195,14 @@ for ticker in watchlist if watchlist else sys.argv[1:]:
             elif isinstance(cell.value, (int, float)):
                 cell.fill = openpyxl.styles.PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid')
     sheet.move_range("A1:E11", rows=0, cols=12)
+    for row in dataframe_to_rows(refined_df, header=True, index=True):
+        sheet.append(row)
+    sheet.move_range("A12:L19", rows=-11, cols=0)
+    sheet.move_range("A3:P8", rows=-1, cols=0)
     workbook.save(Path('data', '_analysis', f'{ticker}.xlsx'))
 
 '''
 Tasks
-
-Move to right enough for other items to go in
-Conditional format
 Write ratios to workbook
 Move down enough for other items to go in
 Write items
