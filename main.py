@@ -187,29 +187,48 @@ for ticker in watchlist if watchlist else sys.argv[1:]:
 
     workbook = openpyxl.Workbook()
     sheet = workbook.active
+    
+    for row in dataframe_to_rows(refined_df, header=True, index=True):
+        sheet.append(row)
     for row in dataframe_to_rows(cagr_df, header=True, index=True):
         sheet.append(row)
-    for row in sheet["A1:E11"]:
+    for row in dataframe_to_rows(ratios_df.iloc[:1], index=False):
+        sheet.append(row)
+
+    sheet.move_range("A9:D16", rows=-8, cols=12)
+    sheet.move_range("A3:S8", rows=-1, cols=0)
+    sheet.move_range("A17:D18", rows=-8, cols=0)
+    
+    for row in sheet["N2:P7"]:
         for cell in row:
             if isinstance(cell.value, (int, float)) and cell.value >= 0.1:
                 cell.fill = openpyxl.styles.PatternFill(start_color='00FF00', end_color='00FF00', fill_type='solid')
             elif isinstance(cell.value, (int, float)):
                 cell.fill = openpyxl.styles.PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid')
-    sheet.move_range("A1:E11", rows=0, cols=12)
-    for row in dataframe_to_rows(refined_df, header=True, index=True):
-        sheet.append(row)
-    for row in dataframe_to_rows(ratios_df.iloc[:1], index=False):
-        sheet.append(row)
-    sheet.move_range("A12:L21", rows=-11, cols=0)
-    sheet.move_range("A3:P8", rows=-1, cols=0)
+
+    start_col = len(ratios_df.columns) + 2
+    start_row = len(refined_df) + 3
+
+    sheet[f'{openpyxl.utils.get_column_letter(start_col)}{start_row}'] = 'Present Value'
+    sheet[f'{openpyxl.utils.get_column_letter(start_col+1)}{start_row}'] = 'Margin of Safety'
+    sheet[f'{openpyxl.utils.get_column_letter(start_col+2)}{start_row}'] = 'Market Price'
+    sheet[f'{openpyxl.utils.get_column_letter(start_col)}{start_row+1}'] = present_value
+    sheet[f'{openpyxl.utils.get_column_letter(start_col+1)}{start_row+1}'] = present_value / 2
+    sheet[f'{openpyxl.utils.get_column_letter(start_col+2)}{start_row+1}'] = eod['historical'][0]['adjClose']
+    cell = sheet[f'{openpyxl.utils.get_column_letter(start_col+2)}{start_row+1}']
+    if isinstance(cell.value, (int, float)) and cell.value <= sheet[f'{openpyxl.utils.get_column_letter(start_col+1)}{start_row+1}'].value:
+        cell.fill = openpyxl.styles.PatternFill(start_color='00FF00', end_color='00FF00', fill_type='solid')
+    elif isinstance(cell.value, (int, float)) and cell.value <= sheet[f'{openpyxl.utils.get_column_letter(start_col)}{start_row+1}'].value:
+        cell.fill = openpyxl.styles.PatternFill(start_color='FFA500', end_color='FFA500', fill_type='solid')
+    elif isinstance(cell.value, (int, float)):
+        cell.fill = openpyxl.styles.PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid')
+
     workbook.save(Path('data', '_analysis', f'{ticker}.xlsx'))
 
 '''
 Tasks
 Convert the writing of data to the excel directly to the correct location rather than just appending to the sheet:
 - https://stackoverflow.com/questions/77914585/pandas-openpyxl-write-dataframe-with-left-corner-on-a-specific-cell
-
-Add margin of safety calculations
 
 Improve formatting to match existing (cleaner) style
 '''
