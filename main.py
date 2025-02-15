@@ -183,6 +183,7 @@ for ticker in watchlist if watchlist else sys.argv[1:]:
     cagrs_cols = ['roic_avg'] + [f'{c}_cagr' for c in stats_to_display if c != 'roic'] 
     cagr_df = df.loc[[v for v in df.index.values if v in [1, 3, 5, min(max(df.index.values), 10)]], cagrs_cols].transpose().iloc[:, ::-1]
     refined_df = df[stats_to_display].transpose().iloc[:, ::-1]
+    ratios_df = df[key_info_metrics].drop(['date','roic'], axis=1)
 
     workbook = openpyxl.Workbook()
     sheet = workbook.active
@@ -197,15 +198,20 @@ for ticker in watchlist if watchlist else sys.argv[1:]:
     sheet.move_range("A1:E11", rows=0, cols=12)
     for row in dataframe_to_rows(refined_df, header=True, index=True):
         sheet.append(row)
-    sheet.move_range("A12:L19", rows=-11, cols=0)
+    for row in dataframe_to_rows(ratios_df.iloc[:1], index=False):
+        sheet.append(row)
+    sheet.move_range("A12:L21", rows=-11, cols=0)
     sheet.move_range("A3:P8", rows=-1, cols=0)
     workbook.save(Path('data', '_analysis', f'{ticker}.xlsx'))
 
 '''
 Tasks
-Write ratios to workbook
-Move down enough for other items to go in
-Write items
+Convert the writing of data to the excel directly to the correct location rather than just appending to the sheet:
+- https://stackoverflow.com/questions/77914585/pandas-openpyxl-write-dataframe-with-left-corner-on-a-specific-cell
+
+Add margin of safety calculations
+
+Improve formatting to match existing (cleaner) style
 '''
 '''
 records = sorted(records, key=lambda record: record.weight, reverse=True)
