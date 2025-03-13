@@ -198,7 +198,7 @@ for ticker in watchlist if watchlist else sys.argv[1:]:
     sheet.move_range("A9:D16", rows=-8, cols=12)
     sheet.move_range("A3:S8", rows=-1, cols=0)
     sheet.move_range("A17:D18", rows=-8, cols=0)
-    
+
     for row in sheet["N2:P7"]:
         for cell in row:
             if isinstance(cell.value, (int, float)) and cell.value >= 0.1:
@@ -231,6 +231,12 @@ Convert the writing of data to the excel directly to the correct location rather
 - https://stackoverflow.com/questions/77914585/pandas-openpyxl-write-dataframe-with-left-corner-on-a-specific-cell
 
 Improve formatting to match existing (cleaner) style
+
+Clean up code
+
+Buy Starter from FMP for one month to explore what more is available
+
+Start working through QEMP book to manage portfolio  
 '''
 '''
 records = sorted(records, key=lambda record: record.weight, reverse=True)
