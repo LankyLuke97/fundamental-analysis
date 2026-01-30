@@ -9,3 +9,5 @@ python-dotenv
 scikit-learn
 openpyxl
 requests
+yfinance
+
