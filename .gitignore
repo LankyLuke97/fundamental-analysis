@@ -1,3 +1,7 @@
+# Project specific
+orders.csv
+qepm.pdf
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

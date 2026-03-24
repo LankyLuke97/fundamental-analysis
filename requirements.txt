@@ -2,6 +2,8 @@
 # >= or <= to specify a range of version numbers,
 # or simply the module name to keep up to date
 
+httpx
+mypy
 numpy
 pandas
 python-dateutil
