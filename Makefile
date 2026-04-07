@@ -18,3 +18,15 @@ create_volume:
 
 remove_volume: stop_postgres
 	docker volume rm postgres_data
+
+generate_schema:
+	embar schema > db/schema.sql
+	
+generate_diff:
+	docker run --rm --net=host \
+	    -v $$(pwd)/db:/migrations \
+	    -w /db \
+	    arigaio/atlas:latest migrate diff --env local --dir file://db/migrations --to file://db/schema.sql
+
+apply_diff:
+	atlas migrate apply --env local --dir file://db/migrations
