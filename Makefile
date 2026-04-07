@@ -16,5 +16,5 @@ stop_postgres:
 create_volume:
 	docker volume create postgres_data
 
-remove_volume:
+remove_volume: stop_postgres
 	docker volume rm postgres_data
