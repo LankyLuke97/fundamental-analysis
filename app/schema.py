@@ -1,4 +1,5 @@
-import embar.coloumn.common as pg_types
+import embar.column.common as common_types
+import embar.column.pg as pg_types
 from embar.config import EmbarConfig
 from embar.table import Table
 
@@ -10,6 +11,6 @@ class Transaction(Table):
     price: pg_types.Numeric = pg_types.numeric(precision=19,scale=2)
     fees: pg_types.Numeric = pg_types.numeric(precision=19,scale=2)
     currency: pg_types.Varchar = pg_types.varchar(length=3)
-    quantity: pg_types.Float = pg_types.float_col()
+    quantity: common_types.Float = common_types.float_col()
     datetime: pg_types.Timestamp = pg_types.timestamp()
-    notes: pg_types.Text = pg_types.text()
+    notes: common_types.Text = common_types.text()
