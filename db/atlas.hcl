@@ -1,4 +1,4 @@
 env "local" {
   src = "file://schema.sql"
-  url = "postgresql://myuser:mypassword@postgres-db:5432/mydatabase"
+  url = "postgres://myuser:mypassword@localhost:5433/mydatabase"
 }

@@ -23,10 +23,14 @@ generate_schema:
 	embar schema > db/schema.sql
 	
 generate_diff:
-	docker run --rm --net=host \
-	    -v $$(pwd)/db:/migrations \
-	    -w /db \
-	    arigaio/atlas:latest migrate diff --env local --dir file://db/migrations --to file://db/schema.sql
+	docker pull postgres
+	@-docker run --rm --name atlas-mig-db \
+	    -e POSTGRES_PASSWORD=atlas \
+	    -e POSTGRES_USER=atlas \
+	    -e POSTGRES_DB=mig_db \
+	    -p 127.0.0.1:5434:5432 \
+	    -d postgres && sleep 5
+	atlas migrate diff --config file://db/atlas.hcl --env local --dir file://db/migrations --to file://db/schema.sql --dev-url "postgres://atlas:atlas@localhost:5434/mig_db"
 
 apply_diff:
-	atlas migrate apply --env local --dir file://db/migrations
+	atlas migrate apply --config file://db/atlas.hcl --env local --dir file://db/migrations 

@@ -6,10 +6,11 @@ from embar.db.pg import AsyncPgDb, PgDb
 
 @contextmanager
 def open_connection_pool(protocol='postgres', username=None, password=None, hostname='localhost', port=5432, database='postgres', open=True, **kwargs):
-    if not username: raise ValueError("Username must be provided for connection string")
-    if not password: raise ValueError("Password must be provided for connection string")
-
-    connection_string = f"{protocol}://{username}:{password}@{hostname}:{port}/{database}"
+    if 'connection_string' in kwargs: connection_string = kwargs['connection_string']
+    else: 
+        if not username: raise ValueError("Username must be provided for connection string")
+        if not password: raise ValueError("Password must be provided for connection string")
+        connection_string = f"{protocol}://{username}:{password}@{hostname}:{port}/{database}"
     try:
         pool = ConnectionPool(conninfo=connection_string, open=open, **kwargs)
         yield PgDb(pool)
@@ -18,12 +19,14 @@ def open_connection_pool(protocol='postgres', username=None, password=None, host
 
 @asynccontextmanager
 async def open_async_connection_pool(protocol='postgres', username=None, password=None, hostname='localhost', port=5432, database='postgres', open=True, **kwargs):
-    if not username: raise ValueError("Username must be provided for connection string")
-    if not password: raise ValueError("Password must be provided for connection string")
-
-    connection_string = f"{protocol}://{username}:{password}@{hostname}:{port}/{database}"
+    if 'connection_string' in kwargs: connection_string = kwargs['connection_string']
+    else: 
+        if not username: raise ValueError("Username must be provided for connection string")
+        if not password: raise ValueError("Password must be provided for connection string")
+        connection_string = f"{protocol}://{username}:{password}@{hostname}:{port}/{database}"
     try:
-        pool = await ConnectionPool(conninfo=connection_string, open=open, **kwargs)
+        pool = await AsyncConnectionPool(conninfo=connection_string, open=False, **kwargs)
+        if open: await pool.open()
         yield AsyncPgDb(pool)
     finally:
         pool.close()
