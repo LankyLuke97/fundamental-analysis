@@ -6,7 +6,9 @@ from embar.db.pg import AsyncPgDb, PgDb
 
 @contextmanager
 def open_connection_pool(protocol='postgres', username=None, password=None, hostname='localhost', port=5432, database='postgres', open=True, **kwargs):
-    if 'connection_string' in kwargs: connection_string = kwargs['connection_string']
+    if 'connection_string' in kwargs: 
+        connection_string = kwargs['connection_string']
+        del kwargs['connection_string']
     else: 
         if not username: raise ValueError("Username must be provided for connection string")
         if not password: raise ValueError("Password must be provided for connection string")
@@ -15,11 +17,13 @@ def open_connection_pool(protocol='postgres', username=None, password=None, host
         pool = ConnectionPool(conninfo=connection_string, open=open, **kwargs)
         yield PgDb(pool)
     finally:
-        pool.close()
+        if pool: pool.close()
 
 @asynccontextmanager
 async def open_async_connection_pool(protocol='postgres', username=None, password=None, hostname='localhost', port=5432, database='postgres', open=True, **kwargs):
-    if 'connection_string' in kwargs: connection_string = kwargs['connection_string']
+    if 'connection_string' in kwargs: 
+        connection_string = kwargs['connection_string']
+        del kwargs['connection_string']
     else: 
         if not username: raise ValueError("Username must be provided for connection string")
         if not password: raise ValueError("Password must be provided for connection string")
@@ -29,5 +33,5 @@ async def open_async_connection_pool(protocol='postgres', username=None, passwor
         if open: await pool.open()
         yield AsyncPgDb(pool)
     finally:
-        pool.close()
+        if pool: pool.close()
 

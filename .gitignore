@@ -1,5 +1,5 @@
 # Project specific
-orders.csv
+data/
 qepm.pdf
 
 # Byte-compiled / optimized / DLL files

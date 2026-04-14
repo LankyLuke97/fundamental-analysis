@@ -22,7 +22,7 @@ remove_volume: stop_postgres
 generate_schema:
 	embar schema > db/schema.sql
 	
-generate_diff:
+generate_diff: generate_schema
 	docker pull postgres
 	@-docker run --rm --name atlas-mig-db \
 	    -e POSTGRES_PASSWORD=atlas \
@@ -32,5 +32,5 @@ generate_diff:
 	    -d postgres && sleep 5
 	atlas migrate diff --config file://db/atlas.hcl --env local --dir file://db/migrations --to file://db/schema.sql --dev-url "postgres://atlas:atlas@localhost:5434/mig_db"
 
-apply_diff:
+apply_diff: generate_diff
 	atlas migrate apply --config file://db/atlas.hcl --env local --dir file://db/migrations 
