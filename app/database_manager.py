@@ -1,11 +1,11 @@
-from contextlib import asynccontextmanager, contextmanager
-from psycopg_pool import AsyncConnectionPool, ConnectionPool
-from typing import Annotated
+from contextlib import contextmanager
 
-from embar.db.pg import AsyncPgDb, PgDb
+from sqlmodel import create_engine, Session
+
+engine = None
 
 @contextmanager
-def open_connection_pool(protocol='postgres', username=None, password=None, hostname='localhost', port=5432, database='postgres', open=True, **kwargs):
+def connect(protocol='postgres', username=None, password=None, hostname='localhost', port=5432, database='postgres', echo=False, **kwargs):
     if 'connection_string' in kwargs: 
         connection_string = kwargs['connection_string']
         del kwargs['connection_string']
@@ -14,24 +14,9 @@ def open_connection_pool(protocol='postgres', username=None, password=None, host
         if not password: raise ValueError("Password must be provided for connection string")
         connection_string = f"{protocol}://{username}:{password}@{hostname}:{port}/{database}"
     try:
+        engine = engine or create_engine(connection_string, echo=echo)
         pool = ConnectionPool(conninfo=connection_string, open=open, **kwargs)
         yield PgDb(pool)
-    finally:
-        if pool: pool.close()
-
-@asynccontextmanager
-async def open_async_connection_pool(protocol='postgres', username=None, password=None, hostname='localhost', port=5432, database='postgres', open=True, **kwargs):
-    if 'connection_string' in kwargs: 
-        connection_string = kwargs['connection_string']
-        del kwargs['connection_string']
-    else: 
-        if not username: raise ValueError("Username must be provided for connection string")
-        if not password: raise ValueError("Password must be provided for connection string")
-        connection_string = f"{protocol}://{username}:{password}@{hostname}:{port}/{database}"
-    try:
-        pool = await AsyncConnectionPool(conninfo=connection_string, open=False, **kwargs)
-        if open: await pool.open()
-        yield AsyncPgDb(pool)
     finally:
         if pool: pool.close()
 

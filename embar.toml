@@ -1,4 +1,0 @@
-dialect = "postgresql"
-db_url = "postgresql://myuser:mypassword@localhost:5433/mydatabase"
-schema_path = "app.schema"
-migrations_dir = "db/migrations"
