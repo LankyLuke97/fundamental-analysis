@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import TypedDict
 
 import embar.column.common as common_types
 import embar.column.pg as pg_types

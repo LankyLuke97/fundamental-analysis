@@ -12,8 +12,7 @@ with open('data/orders.csv', mode='r', encoding='utf-8') as orders:
         if const['type'] == 'sell': const['quantity'] *= -1
         del const['type']
         const['datetime'] = datetime.strptime(const['datetime'], '%Y-%m-%d')
-        const['id'] = None
+        const['id'] = 0
         transactions.append(Transaction(**const))
     with open_connection_pool(connection_string='postgres://myuser:mypassword@localhost:5433/mydatabase') as db:
-        print(db.insert(Transaction).values(transactions[0]).sql())
-        db.insert(Transaction).values(*transactions)
+        db.insert(Transaction).values(*transactions).run()
