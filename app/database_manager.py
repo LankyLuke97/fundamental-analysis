@@ -6,6 +6,7 @@ engine = None
 
 @contextmanager
 def connect(protocol='postgres', username=None, password=None, hostname='localhost', port=5432, database='postgres', echo=False, **kwargs):
+    global engine
     if 'connection_string' in kwargs: 
         connection_string = kwargs['connection_string']
         del kwargs['connection_string']
@@ -15,8 +16,8 @@ def connect(protocol='postgres', username=None, password=None, hostname='localho
         connection_string = f"{protocol}://{username}:{password}@{hostname}:{port}/{database}"
     try:
         engine = engine or create_engine(connection_string, echo=echo)
-        pool = ConnectionPool(conninfo=connection_string, open=open, **kwargs)
-        yield PgDb(pool)
+        session = Session(engine)
+        yield session
     finally:
-        if pool: pool.close()
+        if session: session.close()
 
