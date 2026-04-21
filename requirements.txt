@@ -3,6 +3,7 @@
 # or simply the module name to keep up to date
 
 alembic
+fastapi
 httpx
 mypy
 numpy
@@ -11,4 +12,5 @@ psycopg
 python-dateutil
 python-dotenv
 sqlmodel
+uvicorn[standard]
 
