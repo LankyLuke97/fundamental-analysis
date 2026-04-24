@@ -13,4 +13,9 @@ connection_string = f"{config['DB_PROTOCOL']}://{config['DB_USER']}:{config['DB_
 @app.get('/transactions')
 async def about() -> list[Transaction]:
     with connect(echo=True, connection_string=connection_string) as session:
-        return session.exec(select(Transaction).where(Transaction.ticker == 'GAW.L')).all()
+        return session.exec(select(Transaction)).all()
+
+@app.get('/transactions/{ticker}')
+async def about(ticker: str) -> list[Transaction]:
+    with connect(echo=True, connection_string=connection_string) as session:
+        return session.exec(select(Transaction).where(Transaction.ticker == ticker)).all()
