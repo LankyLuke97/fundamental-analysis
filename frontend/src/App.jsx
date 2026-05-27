@@ -4,30 +4,30 @@ import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
 
-const DATA_ENDPOINT = 'http://localhost:8000';
+const DATA_ENDPOINT = 'http://localhost:8000/transactions'; {/* Currently transactions is the only endpoint */}
 const FILTERS = {ticker: '', dateFrom: '', dateTo: '',}
 const App = () => {
     const [transactionItems, setTransactionItems] = useState([]);
-    const [filters, setFilters] = useState(FILTERS)
+    const [filters, setFilters] = useState(FILTERS);
+    const [url, setUrl] = useState(DATA_ENDPOINT);
 
     const handleSearchInput = (key, value) => setFilters({...filters, [key]: value});
     const handleSearchSubmit = event => {
-        console.log(filters);
+        let queryString = new URLSearchParams(Object.entries(filters).filter(([_, value]) => value != null && value.trim() != '')).toString();
+        queryString = queryString ? `?${queryString}` : '';
+        setUrl(`${DATA_ENDPOINT}${queryString}`);
         event.preventDefault();
-        // construct query string from non empty filters
-        // append to endpoint
-        // update stored endpoint so that the data in the list updates
     };
 
     const fetchEndpoint = useCallback(async () => {
         try {
-            const response = await fetch(`${DATA_ENDPOINT}/transactions`);
+            const response = await fetch(url);
             const result = await response.json();
             setTransactionItems(result);
         } catch (error) {
             console.log(`Error while downloading from ${DATA_ENDPOINT}:\n`, error);
         }
-    }, []);
+    }, [url]);
 
     useEffect(() => {fetchEndpoint()}, [fetchEndpoint]);
 
