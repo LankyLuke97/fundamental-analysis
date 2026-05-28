@@ -5,7 +5,7 @@ import heroImg from './assets/hero.png'
 import './App.css'
 
 const DATA_ENDPOINT = 'http://localhost:8000/transactions'; {/* Currently transactions is the only endpoint */}
-const FILTERS = {ticker: '', dateFrom: '', dateTo: '',}
+const FILTERS = {ticker: {value: '', type: 'text'}, dateFrom: {value: '', type: 'date'}, dateTo: {value: '', type: 'date'},}
 
 const transactionActions = {
     fetchInitial: 'FETCH_TRANSACTIONS',
@@ -89,14 +89,14 @@ const App = () => {
 
 const SearchForm = ({ filters, onSearchInput, onSearchSubmit }) => console.log('rendering form') || (
     <form onSubmit={onSearchSubmit} className="search-form">
-        {Object.entries(filters).map(([key, value]) => 
-            <InputWithLabel key={key} id={`filter${key}`} value={value} isFocused onInputChange={(e) => onSearchInput(key, e.target.value)}>{key}:&nbsp;</InputWithLabel>
+        {Object.entries(filters).map(([key, details]) => 
+            <InputWithLabel key={key} id={`filter${key}`} details={details} isFocused onInputChange={(e) => onSearchInput(key, e.target.value)}>{key}:&nbsp;</InputWithLabel>
         )}
         <button className="button button_large" type="submit">&#x1F50D;</button>
     </form>
 );
 
-const InputWithLabel = ({id, value, type='text', onInputChange, isFocused, children}) => {
+const InputWithLabel = ({id, details, onInputChange, isFocused, children}) => {
     const inputRef = useRef();
     useEffect(() => {
         if (isFocused && inputRef.current) inputRef.current.focus();
@@ -105,7 +105,7 @@ const InputWithLabel = ({id, value, type='text', onInputChange, isFocused, child
     return (
         <>
             <label className="label" htmlFor={id}>{children}</label>
-            <input className="input" id={id} type={type} value={value} onChange={onInputChange}/>
+            <input className="input" id={id} type={details.type} value={details.value} onChange={onInputChange}/>
             {/* Always pass functions to handlers, not the return value -
                 unless the function returns another function.
             */}
