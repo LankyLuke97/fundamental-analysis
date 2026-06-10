@@ -11,6 +11,7 @@ pandas
 psycopg
 python-dateutil
 python-dotenv
+ruff
 sqlmodel
 uvicorn[standard]
 
