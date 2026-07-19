@@ -26,4 +26,4 @@ async def about(ticker: str | None = None) -> list[Transaction]:
         statement = select(Transaction)
         if ticker:
             statement = statement.where(Transaction.ticker == ticker)
-        return session.exec(statement).all()
+        return list(session.exec(statement).all())
