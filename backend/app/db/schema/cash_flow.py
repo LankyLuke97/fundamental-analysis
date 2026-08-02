@@ -2,11 +2,11 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import TEXT
+from sqlmodel import TEXT
 from sqlmodel import Column, Field, SQLModel, TIMESTAMP, text, Relationship
 
-from app.db.schemas.cash_flow_category import CashFlowCategory
-from app.db.schemas.cash_flow_tag import CashFlowTag, CashFlowTagLink
+from app.db.schema.cash_flow_category import CashFlowCategory
+from app.db.schema.cash_flow_tag import CashFlowTag, CashFlowTagLink
 
 
 class CashFlowBase(SQLModel):

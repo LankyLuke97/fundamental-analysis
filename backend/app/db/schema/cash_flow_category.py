@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 class CashFlowCategoryBase(SQLModel):
     name: str = Field(max_length=128)
-    description: Optional[str] = Field(max_length=1024)
+    description: Optional[str] = Field(default=None, max_length=1024)
 
 
 class CashFlowCategory(CashFlowCategoryBase, table=True):
