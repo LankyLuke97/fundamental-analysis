@@ -8,6 +8,7 @@ httpx
 numpy
 pandas
 psycopg
+pytest-icdiff
 python-dateutil
 python-dotenv
 ruff
