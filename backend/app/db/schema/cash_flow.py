@@ -2,8 +2,16 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from sqlmodel import TEXT
-from sqlmodel import Column, Field, SQLModel, TIMESTAMP, text, Relationship
+from pydantic import model_validator
+from sqlmodel import (
+    Column,
+    Field,
+    Relationship,
+    SQLModel,
+    text,
+    TEXT,
+    TIMESTAMP,
+)
 
 from app.db.schema.cash_flow_category import CashFlowCategory
 from app.db.schema.cash_flow_tag import CashFlowTag, CashFlowTagLink

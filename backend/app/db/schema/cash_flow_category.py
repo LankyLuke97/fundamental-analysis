@@ -3,7 +3,7 @@ from sqlmodel import Field, SQLModel, Relationship
 
 
 if TYPE_CHECKING:
-    from app.db.schemas.cash_flow import CashFlow
+    from app.db.schema.cash_flow import CashFlow
 
 
 class CashFlowCategoryBase(SQLModel):
