@@ -5,46 +5,27 @@ from decimal import Decimal
 from pytest import fixture, raises
 from sqlmodel import SQLModel, Session
 
-from app.db.database import get_session
 from app.db.schema.cash_flow import CashFlow
 from app.db.schema.cash_flow_category import CashFlowCategory
-from app.main import app
 from app.service.cash_flow import CashFlowNotFound, CashFlowService
-
-from tests.test_database import get_test_session
-
-
-app.dependency_overrides[get_session] = get_test_session
 
 
 @contextmanager
 def temp_database_data(data: Iterable[SQLModel], session: Session):
-    for datum in data:
-        session.add(datum)
+    session.add_all(data)
     session.commit()
     for datum in data:
         session.refresh(datum)
-    try:
-        yield data
-    finally:
-        for datum in data:
-            session.delete(datum)
-        session.commit()
+    yield data
 
 
 @fixture
-def session():
-    with get_test_session() as session:
-        yield session
+def service(test_session):
+    yield CashFlowService(session=test_session)
 
 
 @fixture
-def service(session):
-    yield CashFlowService(session=session)
-
-
-@fixture
-def add_categories(session):
+def add_categories(test_session):
     categories = [
         CashFlowCategory(
             name="Test category 1",
@@ -58,12 +39,12 @@ def add_categories(session):
         ),
     ]
 
-    with temp_database_data(categories, session) as data:
+    with temp_database_data(categories, test_session) as data:
         yield data
 
 
 @fixture
-def add_cash_flows(session, add_categories):
+def add_cash_flows(test_session, add_categories):
     categories = add_categories
     cash_flows = [
         CashFlow(
@@ -79,7 +60,7 @@ def add_cash_flows(session, add_categories):
             category_id=categories[1].id,
         ),
     ]
-    with temp_database_data(cash_flows, session) as data:
+    with temp_database_data(cash_flows, test_session) as data:
         yield data
 
 
@@ -89,7 +70,7 @@ def test_get_cash_flow(service, add_cash_flows):
     assert retrieved == expected
 
 
-def test_get_missing_cash_flow(service, add_cash_flows):
+def test_get_missing_cash_flow(service):
     with raises(CashFlowNotFound):
         service.get_cash_flow(-1)
 

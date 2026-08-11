@@ -1,3 +1,4 @@
+from pytest import fixture
 from sqlmodel import create_engine, Session, SQLModel
 
 # When creating the database tables with SQLModel.metadata.create_all,
@@ -6,14 +7,11 @@ from sqlmodel import create_engine, Session, SQLModel
 from app.db.schema import all  # noqa: F401
 
 
-# This is temporary 'up-and-running' code to test some of the models
-sqlite_url = "sqlite://"
-engine = create_engine(sqlite_url, echo=False)
+@fixture
+def test_session():
+    sqlite_url = "sqlite://"
+    engine = create_engine(sqlite_url, echo=False)
 
-SQLModel.metadata.create_all(engine)
-
-
-def get_test_session():
+    SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
-        print("Setting up test database")
-        return session
+        yield session
