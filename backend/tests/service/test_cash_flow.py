@@ -3,7 +3,8 @@ from typing import Iterable
 from decimal import Decimal
 
 from pytest import fixture, raises
-from sqlmodel import SQLModel, Session
+from sqlalchemy import exc as SqlAlchemyExc
+from sqlmodel import SQLModel, Session, select
 
 from app.db.schema.cash_flow import CashFlow
 from app.db.schema.cash_flow_category import CashFlowCategory
@@ -88,3 +89,13 @@ def test_add_cash_flow(service, add_categories):
     assert cash_flow.id is not None
     assert Decimal("200.00") == cash_flow.value
     assert category.id == cash_flow.category_id
+
+
+def test_add_cash_flow_no_category(service):
+    with raises(SqlAlchemyExc.IntegrityError):
+        service.add_cash_flow(
+            CashFlow(
+                value=Decimal("200.00"),
+                category_id=0,
+            )
+        )

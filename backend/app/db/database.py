@@ -1,3 +1,4 @@
+from sqlalchemy import event
 from sqlmodel import create_engine, Session, SQLModel
 
 # When creating the database tables with SQLModel.metadata.create_all,
@@ -10,10 +11,15 @@ from app.db.schema import all  # noqa: F401
 sqlite_url = "sqlite://"
 engine = create_engine(sqlite_url, echo=False)
 
+
+@event.listens_for(engine, "connect")
+def enable_foreign_keys(dbapi_connection, _):
+    dbapi_connection.execute("PRAGMA foreign_keys=ON")
+
+
 SQLModel.metadata.create_all(engine)
 
 
 def get_session():
     with Session(engine) as session:
-        print("Getting real database session")
         yield session

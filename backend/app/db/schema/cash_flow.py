@@ -19,12 +19,11 @@ from app.db.schema.cash_flow_tag import CashFlowTag, CashFlowTagLink
 
 class CashFlowBase(SQLModel):
     value: Decimal = Field(default=0, max_digits=19, decimal_places=2)
-    category_id: int = Field(foreign_key="cash_flow_categories.id")
+    category_id: int = Field(foreign_key="cash_flow_categories.id", nullable=False)
     currency: Optional[str] = Field(default="GBP", max_length=3)
     conversion_rate: Optional[Decimal] = Field(
         default=1.0, max_digits=19, decimal_places=2
     )
-    conversion_rate: Optional[Decimal] = Field(default=1.0)
     expense: Optional[bool] = Field(default=True)
     timestamp: Optional[datetime] = Field(
         default_factory=datetime.now,
