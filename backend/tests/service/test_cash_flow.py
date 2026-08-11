@@ -99,3 +99,8 @@ def test_add_cash_flow_no_category(service):
                 category_id=0,
             )
         )
+
+
+def test_list_cash_flows(service, add_cash_flows):
+    expected = add_cash_flows
+    assert service.list_cash_flows() == expected

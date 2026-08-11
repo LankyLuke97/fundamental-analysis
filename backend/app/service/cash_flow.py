@@ -1,8 +1,7 @@
+from typing import Sequence
 from sqlmodel import Session, select
 
-from app.db.schema.cash_flow import (
-    CashFlow,
-)
+from app.db.schema.cash_flow import CashFlow
 
 
 class CashFlowNotFound(Exception):
@@ -27,3 +26,8 @@ class CashFlowService:
         if not cash_flow:
             raise CashFlowNotFound
         return cash_flow
+
+    def list_cash_flows(self) -> Sequence[CashFlow]:
+        query = select(CashFlow)
+        cash_flows = self._db.exec(query).all()
+        return cash_flows
