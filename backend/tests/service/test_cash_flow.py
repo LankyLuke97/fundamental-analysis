@@ -123,3 +123,17 @@ def test_update_missing_cash_flow(service):
         service.update_cash_flow(
             -1, CashFlow(id=-1, category_id=-1, value=Decimal("100.00"))
         )
+
+
+def test_delete_cash_flow(service, add_cash_flows):
+    cash_flow = add_cash_flows[0]
+    assert service.delete_cash_flow(cash_flow.id)
+    remaining_cash_flows = service.list_cash_flows()
+    assert 2 == len(remaining_cash_flows)
+    assert add_cash_flows[1] in remaining_cash_flows
+    assert add_cash_flows[2] in remaining_cash_flows
+
+
+def test_delete_missing_cash_flow(service):
+    with raises(CashFlowNotFound):
+        service.delete_cash_flow(-1)
