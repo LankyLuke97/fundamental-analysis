@@ -127,7 +127,7 @@ def test_update_missing_cash_flow(service):
 
 def test_delete_cash_flow(service, add_cash_flows):
     cash_flow = add_cash_flows[0]
-    assert service.delete_cash_flow(cash_flow.id)
+    assert service.delete_cash_flow(cash_flow.id) is None
     remaining_cash_flows = service.list_cash_flows()
     assert 2 == len(remaining_cash_flows)
     assert add_cash_flows[1] in remaining_cash_flows

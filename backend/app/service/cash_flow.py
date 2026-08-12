@@ -23,16 +23,14 @@ class CashFlowService:
         self._db.add(cash_flow)
         self._db.commit()
         self._db.refresh(cash_flow)
-        if not cash_flow or not cash_flow.id:
-            raise Exception  # to-do
         return cash_flow
 
     def get_cash_flow(self, cash_flow_id: int) -> CashFlow:
         return self._fetch_cash_flow_from_db(cash_flow_id=cash_flow_id)
 
-    def list_cash_flows(self) -> Sequence[CashFlow]:
+    def list_cash_flows(self) -> list[CashFlow]:
         query = select(CashFlow)
-        cash_flows = self._db.exec(query).all()
+        cash_flows = list(self._db.exec(query).all())
         return cash_flows
 
     def update_cash_flow(
@@ -45,8 +43,7 @@ class CashFlowService:
         self._db.refresh(stored_cash_flow)
         return stored_cash_flow
 
-    def delete_cash_flow(self, cash_flow_id: int) -> bool:
+    def delete_cash_flow(self, cash_flow_id: int) -> None:
         stored_cash_flow = self._fetch_cash_flow_from_db(cash_flow_id=cash_flow_id)
         self._db.delete(stored_cash_flow)
         self._db.commit()
-        return True
