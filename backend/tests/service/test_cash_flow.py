@@ -6,7 +6,7 @@ from pytest import fixture, raises
 from sqlalchemy import exc as SqlAlchemyExc
 from sqlmodel import SQLModel, Session, select
 
-from app.db.schema.cash_flow import CashFlow
+from app.db.schema.cash_flow import CashFlow, CashFlowUpdate
 from app.db.schema.cash_flow_category import CashFlowCategory
 from app.service.cash_flow import CashFlowNotFound, CashFlowService
 
@@ -102,5 +102,24 @@ def test_add_cash_flow_no_category(service):
 
 
 def test_list_cash_flows(service, add_cash_flows):
-    expected = add_cash_flows
-    assert service.list_cash_flows() == expected
+    expected: list[CashFlow] = add_cash_flows
+    assert expected == service.list_cash_flows()
+
+
+def test_list_no_cash_flows(service):
+    assert [] == service.list_cash_flows()
+
+
+def test_update_cash_flow(service, add_cash_flows):
+    cash_flow: CashFlow = add_cash_flows[0]
+    cash_flow.value = Decimal("150.00")
+    cash_flow.currency = "EUR"
+    updated_cash_flow = service.update_cash_flow(cash_flow.id, cash_flow)
+    assert cash_flow == updated_cash_flow
+
+
+def test_update_missing_cash_flow(service):
+    with raises(CashFlowNotFound):
+        service.update_cash_flow(
+            -1, CashFlow(id=-1, category_id=-1, value=Decimal("100.00"))
+        )

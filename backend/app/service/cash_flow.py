@@ -1,7 +1,7 @@
 from typing import Sequence
 from sqlmodel import Session, select
 
-from app.db.schema.cash_flow import CashFlow
+from app.db.schema.cash_flow import CashFlow, CashFlowUpdate
 
 
 class CashFlowNotFound(Exception):
@@ -31,3 +31,16 @@ class CashFlowService:
         query = select(CashFlow)
         cash_flows = self._db.exec(query).all()
         return cash_flows
+
+    def update_cash_flow(
+        self, cash_flow_id: int, cash_flow: CashFlowUpdate
+    ) -> CashFlow:
+        query = select(CashFlow).where(CashFlow.id == cash_flow_id)
+        stored_cash_flow = self._db.exec(query).first()
+        if not stored_cash_flow:
+            raise CashFlowNotFound
+        stored_cash_flow.sqlmodel_update(cash_flow.model_dump(exclude_unset=True))
+        self._db.add(stored_cash_flow)
+        self._db.commit()
+        self._db.refresh(stored_cash_flow)
+        return stored_cash_flow
