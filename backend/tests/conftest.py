@@ -6,6 +6,13 @@ from sqlmodel import create_engine, Session, SQLModel
 # the models must first be imported to register them. This is not needed
 # when using Alembic (or equivalent).
 from app.db.schema import all  # noqa: F401
+from app.main import app
+
+
+@fixture(autouse=True)
+def clear_overrides():
+    yield
+    app.dependency_overrides.clear()
 
 
 @fixture
