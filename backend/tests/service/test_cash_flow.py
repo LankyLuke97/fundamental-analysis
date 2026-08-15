@@ -9,6 +9,13 @@ from sqlmodel import SQLModel, Session, select
 from app.db.schema.cash_flow import CashFlow, CashFlowUpdate
 from app.db.schema.cash_flow_category import CashFlowCategory
 from app.service.cash_flow import CashFlowNotFound, CashFlowService
+from tests.test_database import test_get_session
+
+
+# The issue I'm having here is that the service expects a session and I want to
+# add things to that session, which makes it much harder to do the dependency
+# injection with app.dependency_overrides. I think either I'm doing something
+# wrong, or this is a good example of why you use a repository layer
 
 
 @contextmanager
