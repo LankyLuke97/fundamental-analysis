@@ -1,4 +1,3 @@
-from typing import Sequence
 from sqlmodel import Session, select
 
 from app.db.schema.cash_flow import CashFlow, CashFlowUpdate

@@ -4,12 +4,14 @@ from sqlmodel import create_engine, Session, SQLModel
 # When creating the database tables with SQLModel.metadata.create_all,
 # the models must first be imported to register them. This is not needed
 # when using Alembic (or equivalent).
+from app.core.config import config
 from app.db.schema import all  # noqa: F401
 
 
 # This is temporary 'up-and-running' code to test some of the models
-sqlite_url = "sqlite://"
-engine = create_engine(sqlite_url, echo=False)
+engine = create_engine(
+    config.database_url, connect_args={"check_same_thread": False}, echo=False
+)
 
 
 @event.listens_for(engine, "connect")

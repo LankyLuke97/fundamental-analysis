@@ -1,6 +1,8 @@
-from starlette.status import HTTP_204_NO_CONTENT
 from typing import Sequence
+
 from fastapi import APIRouter, Depends
+from sqlmodel import Session
+from starlette.status import HTTP_204_NO_CONTENT
 
 from app.db.schema.cash_flow import (
     CashFlowCreate,
@@ -11,11 +13,11 @@ from app.db.database import get_session
 from app.service.cash_flow import CashFlowService
 
 
-router = APIRouter(prefix="cash_flows")
+router = APIRouter(prefix="/cash_flows")
 
 
-def get_cash_flow_service() -> CashFlowService:
-    return CashFlowService(session=Depends(get_session))
+def get_cash_flow_service(session: Session = Depends(get_session)) -> CashFlowService:
+    return CashFlowService(session=session)
 
 
 @router.get("/{cash_flow_id}", response_model=CashFlowRead)
