@@ -6,11 +6,11 @@ from pathlib import Path
 
 from sqlmodel import select, Session
 
-from app.db import database
+from app.db import database  # noqa : F401
 from app.db.database import engine
 
 from app.db.schema.cash_flow import CashFlow, CashFlowRead
-from app.db.schema.cash_flow_category import CashFlowCategory, CashFlowCategoryRead
+from app.db.schema.cash_flow_category import CashFlowCategory
 from app.db.schema.cash_flow_tag import CashFlowTag, CashFlowTagRead, CashFlowTagLink
 
 
