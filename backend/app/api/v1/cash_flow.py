@@ -1,3 +1,9 @@
+# There are currenty no unit tests for this route. It's super thin,
+# with most of the logic in the service layer. I can't yet figure out,
+# despite lots of reading, what the testing should be. My solution,
+# therefore, is to leave it untested, and see what breaks and what
+# causes me issues down the line.
+
 from typing import Sequence
 
 from fastapi import APIRouter, Depends

@@ -21,12 +21,12 @@ def temp_database_data(data: Iterable[SQLModel], session: Session):
 
 
 @fixture
-def service(test_session):
-    yield CashFlowService(session=test_session)
+def service(session):
+    yield CashFlowService(session=session)
 
 
 @fixture
-def add_categories(test_session):
+def add_categories(session):
     categories = [
         CashFlowCategory(
             name="Test category 1",
@@ -40,12 +40,12 @@ def add_categories(test_session):
         ),
     ]
 
-    with temp_database_data(categories, test_session) as data:
+    with temp_database_data(categories, session) as data:
         yield data
 
 
 @fixture
-def add_cash_flows(test_session, add_categories):
+def add_cash_flows(session, add_categories):
     categories = add_categories
     cash_flows = [
         CashFlow(
@@ -61,7 +61,7 @@ def add_cash_flows(test_session, add_categories):
             category_id=categories[1].id,
         ),
     ]
-    with temp_database_data(cash_flows, test_session) as data:
+    with temp_database_data(cash_flows, session) as data:
         yield data
 
 
